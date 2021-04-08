@@ -1,44 +1,23 @@
 ﻿using System;
 using System.Reflection;
+using Microsoft.Extensions.Internal;
 
 namespace Fluid.Accessors
 {
-    public class PropertyInfoAccessor : IMemberAccessor
+    public sealed class PropertyInfoAccessor : IMemberAccessor
     {
-        private readonly IInvoker _invoker;
+        private readonly PropertyInfo _propertyInfo;
+        private Func<object, object> _getter;
 
         public PropertyInfoAccessor(PropertyInfo propertyInfo)
         {
-            var delegateType = typeof(Func<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType);
-            var d = propertyInfo.GetGetMethod().CreateDelegate(delegateType);
-
-            var invokerType = typeof(Invoker<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType);
-            _invoker = Activator.CreateInstance(invokerType, new object[] { d }) as IInvoker;
+            _propertyInfo = propertyInfo;
         }
 
         public object Get(object obj, string name, TemplateContext ctx)
         {
-            return _invoker.Invoke(obj);
-        }
-
-        private interface IInvoker
-        {
-            object Invoke(object target);
-        }
-
-        private sealed class Invoker<T, TResult> : IInvoker
-        {
-            private readonly Func<T, TResult> _d;
-
-            public Invoker(Delegate d)
-            {
-                _d = (Func<T, TResult>)d;
-            }
-
-            public object Invoke(object target)
-            {
-                return _d((T)target);
-            }
+            _getter ??= PropertyHelper.MakeFastPropertyGetter(_propertyInfo);
+            return _getter(obj);
         }
     }
 }

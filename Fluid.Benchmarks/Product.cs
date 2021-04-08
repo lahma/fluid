@@ -1,4 +1,6 @@
-﻿namespace Fluid.Benchmarks
+﻿using System;
+
+namespace Fluid.Benchmarks
 {
     public class Product
     {
@@ -14,5 +16,13 @@
         public float Price { get; set; }
 
         public string Description { get; set; }
+
+        // some extra properties that template isn't using
+
+        public string Color { get; set; }
+
+        public int Width { get; set; }
+
+        public DateTime CreatedAt { get; set; }
     }
 }
